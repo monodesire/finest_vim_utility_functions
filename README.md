@@ -15,4 +15,4 @@ Then it's just to call a function like this (example) from within Vim:
 ## Description of functions
 
 ### FindHeaderFile()
-Searches recursively (starting from the current working directory) for a header file (.h) of the active buffer (which is presumably a .c file). If found, the header file will be opened in a new split window.
+For C programmers. Searches recursively (starting from the current working directory) for a header file (.h) of the active buffer (which is presumably a .c file). If found, the header file will be opened in a new split window. If multiple header files are found, a list will be presented with all of them and the user will be able to select which one to open.
