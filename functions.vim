@@ -31,7 +31,7 @@ function! FindHeaderFile()
   let l:path = expand('%:p:h') . "/"
 
   if l:extension !=? "c"
-    echo "FindHeaderFile: Error! Active buffer is not a .c file."
+    echo "FindHeaderFile: Error! Active buffer is not a .c file.\n"
     return 1
   endif
 
@@ -40,7 +40,7 @@ function! FindHeaderFile()
   let l:numberOfFiles = len(l:listOfFiles)
 
   if l:numberOfFiles == 0
-    echo "FindHeaderFile: Info! No corresponding header file was found."
+    echo "FindHeaderFile: Info! No corresponding header file was found.\n"
 
   elseif l:numberOfFiles == 1
     execute "split " . l:listOfFiles[0]
@@ -59,7 +59,7 @@ function! FindHeaderFile()
     if l:userInput =~# "[0-9]" && l:userInput >= 0 && l:userInput < l:numberOfFiles
       execute "split " . l:listOfFiles[l:userInput]
     else
-      echo "FindHeaderFile: Error! Invalid input."
+      echo "FindHeaderFile: Error! Invalid input.\n"
       return 1
     endif
   endif
@@ -73,7 +73,7 @@ endfunction
 "              Relies on a system grep that has support for the --perl-regexp
 "              parameter. Assumes the Vim internal variable 'grepprg' has its
 "              default value. The result of the grep ends up in quickfix.
-" Parameters:  pattern {String}: Grep pattern.
+" Parameters:  pattern {String}: Grep pattern. Perl regexp is accepted.
 "              ignoreCase {Integer} (optional): 0 = match case (default)
 "                                               1 = ignore case
 " Returns:     0 = no errors during execution
@@ -86,7 +86,7 @@ function! PerlGrep(...)
   let l:argumentError = 0
 
   if a:0 == 0
-    echo "PerlGrep: Error! Missing arguments."
+    echo "PerlGrep: Error! Missing arguments.\n"
     let l:argumentError = 1
 
   elseif a:0 > 0
@@ -98,11 +98,11 @@ function! PerlGrep(...)
           let l:ignoreCase = "--ignore-case"
         endif
       else
-        echo "PerlGrep: Error! Second argument must be numerical."
+        echo "PerlGrep: Error! Second argument must be numerical.\n"
         let l:argumentError = 1
       endif
     elseif a:0 > 2
-      echo "PerlGrep: Error! Too many arguments."
+      echo "PerlGrep: Error! Too many arguments.\n"
       let l:argumentError = 1
     endif
 
@@ -117,6 +117,28 @@ function! PerlGrep(...)
   else
     execute "grep! --recursive --binary-files=without-match --no-messages --perl-regexp " . l:ignoreCase . " \"" . l:pattern . "\" *"
   endif
+endfunction
+
+
+" ------------------------------------------------------------------------------
+" Function:    FindFiles(pattern)
+" Description: Function that find files (starting from the current working
+"              directory) according to a search pattern given by the user.
+" Parameters:  pattern {String}: Search pattern. Asterisks are accepted.
+" Returns:     0 = no errors during execution
+" Examples:    :call FindFiles("TC_Test.*")
+"              :call FindFiles("*Test*")
+" ------------------------------------------------------------------------------
+function! FindFiles(pattern)
+  let l:result = setqflist([])
+  let l:fileSearch = globpath(getcwd(), '**/' . a:pattern)
+  let l:listOfFiles = split(l:fileSearch)
+
+  for l:file in l:listOfFiles
+    call setqflist([{'filename': l:file, 'lnum': 1}], 'a')
+  endfor
+
+  echo "FindFiles: Found " . len(l:listOfFiles) . " file(s) matching the search pattern.\n"
 endfunction
 
 

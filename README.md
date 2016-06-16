@@ -25,3 +25,6 @@ For C programmers. Searches recursively for a header file (.h) of the active buf
 
 ### PerlGrep()
 Function that greps in files for a pattern using the Perl regular expression style. The result of the grep ends up in quickfix.
+
+### FindFiles()
+Function that find files according to a search pattern given by the user.
