@@ -2,6 +2,10 @@
 
 Collection of helpful Vim functions.
 
+## Compatibility
+
+The functions have been tested in Vim 7.3 and in a typical/modern Linux environment.
+
 ## How to use
 
 Source functions.vim in your .vimrc file like this:
