@@ -123,7 +123,8 @@ endfunction
 " ------------------------------------------------------------------------------
 " Function:    FindFiles(pattern)
 " Description: Function that find files (starting from the current working
-"              directory) according to a search pattern given by the user.
+"              directory) according to a search pattern given by the user. The
+"              result of the file search ends up in quickfix.
 " Parameters:  pattern {String}: Search pattern. Asterisks are accepted.
 " Returns:     0 = no errors during execution
 " Examples:    :call FindFiles("TC_Test.*")
