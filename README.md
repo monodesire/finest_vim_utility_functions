@@ -4,7 +4,7 @@ Collection of helpful Vim functions.
 
 ## Compatibility
 
-The functions have been tested in Vim 7.3 and in a typical/modern Linux environment.
+The functions have been tested in Vim 7.3 and in a typical/modern Linux environment. Function PerlGrep() was tested with "grep (GNU grep) 2.20".
 
 ## How to use
 
@@ -18,5 +18,10 @@ Then it's just to call a function like this (example) from within Vim:
 
 ## Description of functions
 
+In general, more detailed information is availble in the actual functions.vim file. What is presented here is just a brief description of each function.
+
 ### FindHeaderFile()
-For C programmers. Searches recursively (starting from the current working directory) for a header file (.h) of the active buffer (which is presumably a .c file). If found, the header file will be opened in a new split window. If multiple header files are found, a list will be presented with all of them and the user will be able to select which one to open.
+For C programmers. Searches recursively for a header file (.h) of the active buffer (which is presumably a .c file). If found, the header file will be opened in a new split window.
+
+### PerlGrep()
+Function that greps in files for a pattern using the Perl regular expression style. The result of the grep ends up in quickfix.
