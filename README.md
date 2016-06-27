@@ -4,7 +4,7 @@ Collection of helpful Vim functions.
 
 ## Compatibility
 
-The functions have been tested in Vim 7.3 and in a typical/modern Linux environment. Function PerlGrep() was tested with "grep (GNU grep) 2.20".
+The functions have been tested in Vim 7.3 in a typical/modern Linux environment. Function PerlGrep() was tested with "grep (GNU grep) 2.20".
 
 ## How to use
 
@@ -12,7 +12,7 @@ Source functions.vim in your .vimrc file like this:
 
 `:so functions.vim`
 
-Then it's just to call a function like this (example) from within Vim:
+Then it's just to call a function according to this example from within Vim:
 
 `:call FindHeaderFile()`
 
@@ -28,3 +28,6 @@ Function that greps in files for a pattern using the Perl regular expression sty
 
 ### FindFiles()
 Function that find files according to a search pattern given by the user. The result of the file search ends up in quickfix.
+
+### SelectBuffer()
+This function may be used to search for specific buffers by name. All buffers matching the user-given search string will be presented in a list, and one buffer can be selected to be opened.

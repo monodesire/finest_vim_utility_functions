@@ -40,7 +40,7 @@ function! FindHeaderFile()
   let l:numberOfFiles = len(l:listOfFiles)
 
   if l:numberOfFiles == 0
-    echo "FindHeaderFile: Info! No corresponding header file was found.\n"
+    echo "FindHeaderFile: No corresponding header file was found.\n"
 
   elseif l:numberOfFiles == 1
     execute "split " . l:listOfFiles[0]
@@ -54,7 +54,7 @@ function! FindHeaderFile()
       let l:counter += 1
     endfor
 
-    let l:userInput = s:askForUserInput("\nSelect one to open (0-" . (l:numberOfFiles-1)  . "): ")
+    let l:userInput = s:TrimString(s:askForUserInput("\nSelect one to open (0-" . (l:numberOfFiles-1)  . "): "))
 
     if l:userInput =~# "[0-9]" && l:userInput >= 0 && l:userInput < l:numberOfFiles
       execute "split " . l:listOfFiles[l:userInput]
@@ -79,6 +79,8 @@ endfunction
 " Returns:     0 = no errors during execution
 "              1 = errors during execution
 " Examples:    :call PerlGrep("green:\\s+.*parrot.*talks", 1)
+"              :call PerlGrep("for\\s*\\(.*index", 1)
+"              :call PerlGrep("\\->.*\\->", 1)
 " ------------------------------------------------------------------------------
 function! PerlGrep(...)
   let l:pattern = ""
@@ -143,6 +145,69 @@ function! FindFiles(pattern)
 endfunction
 
 
+" ------------------------------------------------------------------------------
+" Function:    SelectBuffer(searchString)
+" Description: Function that finds a buffer by a user-given search string. The
+"              match is case insensitive. The search string may contain only a
+"              part of a buffer name for a buffer to be found. This function
+"              is heavily based on a function found here:
+"                http://vim.wikia.com/wiki/Easier_buffer_switching
+" Parameters:  searchString {String}: Search string.
+" Returns:     0 = no errors during execution
+" Examples:    :call SelectBuffer("vIm")
+"                The above search string would find these buffers:
+"                  (2) docs/vim/vimlazy.txt
+"                  (4) .vimrc
+"                  (5) vim/functions/finest_vim_utility_functions/functions.vim
+"              :call SelectBuffer("func")
+"                The above search string would find this buffer (notice that
+"                the path of the file/buffer name is also included in the
+"                search):
+"                  (5) vim/functions/finest_vim_utility_functions/functions.vim
+" ------------------------------------------------------------------------------
+function! SelectBuffer(searchString)
+  let l:lastBufferNumber = bufnr("$")
+  let l:currentBufferNumber = 1
+  let l:numberOfMatches = 0
+
+  while l:currentBufferNumber <= l:lastBufferNumber
+    if(bufexists(l:currentBufferNumber))
+      let currentBufferName = bufname(l:currentBufferNumber)
+      if(match(currentBufferName, '\c' . a:searchString) > -1)
+        if l:numberOfMatches == 0
+          echo "SelectBuffer: Buffers found:\n\n"
+        endif
+
+        echo "(" . l:currentBufferNumber . ") " . bufname(l:currentBufferNumber)
+
+        let l:numberOfMatches += 1
+      endif
+    endif
+    let l:currentBufferNumber += 1
+  endwhile
+
+  if(l:numberOfMatches == 0)
+    echo "SelectBuffer: Didn't find any buffers that matches the given search string.\n"
+  else
+    let l:desiredBufferNumber = s:TrimString(s:askForUserInput("\nSelect buffer number: "))
+    if l:desiredBufferNumber =~# "[0-9]"
+      if(bufexists(str2nr(l:desiredBufferNumber)))
+        execute ":buffer " . l:desiredBufferNumber
+      elseif str2nr(l:desiredBufferNumber) == 0
+        echo "SelectBuffer: Error! Buffer 0 cannot be selected.\n"
+        call s:pressAnyKeyToContinue()
+      else
+        echo "SelectBuffer: Error! Buffer " . l:desiredBufferNumber . " doesn't exist. Wrong buffer number given.\n"
+        call s:pressAnyKeyToContinue()
+      endif
+    else
+      echo "SelectBuffer: Error! Wrong input format. Only digits are accepted.\n"
+      call s:pressAnyKeyToContinue()
+    endif
+  endif
+endfunction
+
+
 " ==============================================================================
 " LOCAL FUNCTIONS
 " ==============================================================================
@@ -161,4 +226,31 @@ function! s:askForUserInput(question)
   let l:userInput = input(a:question)
   call inputrestore()
   return l:userInput
+endfunction
+
+
+" ------------------------------------------------------------------------------
+" Function:    s:pressAnyKeyToContinue()
+" Description: Asks the user for any key press.
+" Parameters:  N/A
+" Returns:     0 = no errors during execution
+" Examples:    N/A
+" ------------------------------------------------------------------------------
+function! s:pressAnyKeyToContinue()
+  echo "Press any key to continue."
+  let c = getchar()
+endfunction
+
+
+" ------------------------------------------------------------------------------
+" Function:    s:TrimString
+" Description: Removes leading and trailing whitespaces of a string.
+" Parameters:  stringToFix {String}: The string to remove whitespaces from.
+" Returns:     Same as stringToFix, but with no leading or trailing
+"              whitespaces.
+" Examples:    N/A
+" ------------------------------------------------------------------------------
+function! s:TrimString(stringToFix)
+  let l:fixedString = substitute(a:stringToFix, '^\s*\(.\{-}\)\s*$', '\1', '')
+  return l:fixedString
 endfunction
