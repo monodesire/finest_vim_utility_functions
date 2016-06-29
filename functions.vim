@@ -208,6 +208,59 @@ function! SelectBuffer(searchString)
 endfunction
 
 
+" ------------------------------------------------------------------------------
+" Function:    ToggleFavouriteDirs()
+" Description: A function that changes the local directory for the current
+"              window to the next pre-defined favourite directory. Those
+"              favourite directories are pre-defined by the user in
+"              g:fineFunc_favouriteDirs (global list variable) which is
+"              preferably set in the .vimrc file. For each call to this
+"              function, the function will pick up the next directory (since
+"              it remembers the last one picked) in this list and change to
+"              that directory (using :lcd). Thus, the purpose of this function
+"              is to assist the user in quickly jumping between his/her
+"              favourite dirs.
+" Parameters:  N/A
+" Returns:     0 = no errors during execution
+" Examples:    How to set the global list of favourite directories:
+"                let g:fineFunc_favouriteDirs = ["/home/sunshine/rose/","/tmp/"]
+"              How to map the function to e.g. F11:
+"                map <F11> :call ToggleFavouriteDirs()<CR>
+" ------------------------------------------------------------------------------
+function! ToggleFavouriteDirs()
+  if exists("g:fineFunc_favouriteDirs")
+    if empty(g:fineFunc_favouriteDirs)
+      echo "ToggleFavouriteDirs: Error! List variable g:fineFunc_favouriteDirs is empty.\n"
+      echo "                            Set according to this example in your .vimrc:\n"
+      echo "                            let g:fineFunc_favouriteDirs = [\"/home/sunshine/rose/\",\"/tmp/\"]\n"
+      call s:pressAnyKeyToContinue()
+    else
+      if exists("g:fineFunc_favouriteDirsIndex")
+        let g:fineFunc_favouriteDirsIndex += 1
+        if g:fineFunc_favouriteDirsIndex >= len(g:fineFunc_favouriteDirs)
+          let g:fineFunc_favouriteDirsIndex = 0
+        endif
+      else
+        let g:fineFunc_favouriteDirsIndex = 0
+      endif
+      if isdirectory(g:fineFunc_favouriteDirs[g:fineFunc_favouriteDirsIndex])
+        execute "lcd " . g:fineFunc_favouriteDirs[g:fineFunc_favouriteDirsIndex]
+        echo "ToggleFavouriteDirs: Changed to directory: " . g:fineFunc_favouriteDirs[g:fineFunc_favouriteDirsIndex]
+      else
+        echo "ToggleFavouriteDirs: Error! Directory in g:fineFunc_favouriteDirs at index " . g:fineFunc_favouriteDirsIndex . " does not exist:\n"
+        echo "                            " . g:fineFunc_favouriteDirs[g:fineFunc_favouriteDirsIndex]
+        call s:pressAnyKeyToContinue()
+      endif
+    endif
+  else
+    echo "ToggleFavouriteDirs: Error! List variable g:fineFunc_favouriteDirs has not been set.\n"
+    echo "                            Set according to this example in your .vimrc:\n"
+    echo "                            let g:fineFunc_favouriteDirs = [\"/home/sunshine/rose/\",\"/tmp/\"]\n"
+    call s:pressAnyKeyToContinue()
+  endif
+endfunction
+
+
 " ==============================================================================
 " LOCAL FUNCTIONS
 " ==============================================================================

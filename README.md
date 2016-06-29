@@ -31,3 +31,6 @@ Function that find files according to a search pattern given by the user. The re
 
 ### SelectBuffer()
 This function may be used to search for specific buffers by name. All buffers matching the user-given search string will be presented in a list, and one buffer can be selected to be opened.
+
+### ToggleFavouriteDirs()
+The purpose of this function is to assist a user in quickly jumping between his/her favourite dirs. Those dirs are pre-defined by the user in a global list variable, preferably set in his/her .vimrc file. For each call to this function, it will jump to the next directory in the list and change to that directory (using :lcd) in the current window.
