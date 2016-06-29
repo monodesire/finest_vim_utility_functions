@@ -209,7 +209,7 @@ endfunction
 
 
 " ------------------------------------------------------------------------------
-" Function:    ToggleFavouriteDirs()
+" Function:    ToggleFavouriteDirs(newFavouriteDir)
 " Description: A function that changes the local directory for the current
 "              window to the next pre-defined favourite directory. Those
 "              favourite directories are pre-defined by the user in
@@ -219,15 +219,23 @@ endfunction
 "              it remembers the last one picked) in this list and change to
 "              that directory (using :lcd). Thus, the purpose of this function
 "              is to assist the user in quickly jumping between his/her
-"              favourite dirs.
-" Parameters:  N/A
+"              favourite dirs. A temporary directory may be added to the
+"              favourite list via a parameter. The new directory will be added
+"              to the end of the list and the current window will change into
+"              that directory. However, none of the directories added in this
+"              fashion will be remembered the next time Vim is started.
+" Parameters:  newFavouriteDir {String}: A new favourite directory to
+"                                        temporary add to the end of the
+"                                        favourite list.
 " Returns:     0 = no errors during execution
 " Examples:    How to set the global list of favourite directories:
 "                let g:fineFunc_favouriteDirs = ["/home/sunshine/rose/","/tmp/"]
 "              How to map the function to e.g. F11:
 "                map <F11> :call ToggleFavouriteDirs()<CR>
+"              Add a new temporary favourite directory and jump to it:
+"                :call ToggleFavouriteDirs("/some/nice/path/")
 " ------------------------------------------------------------------------------
-function! ToggleFavouriteDirs()
+function! ToggleFavouriteDirs(...)
   if exists("g:fineFunc_favouriteDirs")
     if empty(g:fineFunc_favouriteDirs)
       echo "ToggleFavouriteDirs: Error! List variable g:fineFunc_favouriteDirs is empty.\n"
@@ -243,15 +251,27 @@ function! ToggleFavouriteDirs()
       else
         let g:fineFunc_favouriteDirsIndex = 0
       endif
+
+      if a:0 > 0
+        if type(a:1) == 1  " 1 means a variable of String type
+          call add(g:fineFunc_favouriteDirs, a:1)
+          let g:fineFunc_favouriteDirsIndex = len(g:fineFunc_favouriteDirs) - 1
+        endif
+      endif
+
       if isdirectory(g:fineFunc_favouriteDirs[g:fineFunc_favouriteDirsIndex])
         execute "lcd " . g:fineFunc_favouriteDirs[g:fineFunc_favouriteDirsIndex]
         echo "ToggleFavouriteDirs: Changed to directory: " . g:fineFunc_favouriteDirs[g:fineFunc_favouriteDirsIndex]
       else
-        echo "ToggleFavouriteDirs: Error! Directory in g:fineFunc_favouriteDirs at index " . g:fineFunc_favouriteDirsIndex . " does not exist:\n"
-        echo "                            " . g:fineFunc_favouriteDirs[g:fineFunc_favouriteDirsIndex]
+        echo "ToggleFavouriteDirs: Error! This directory specified in g:fineFunc_favouriteDirs does not exist:\n"
+        echo "                              " . g:fineFunc_favouriteDirs[g:fineFunc_favouriteDirsIndex]
+        echo "                            Will remove it from the list.\n"
+        call remove(g:fineFunc_favouriteDirs, g:fineFunc_favouriteDirsIndex)
+        let g:fineFunc_favouriteDirsIndex = 0
         call s:pressAnyKeyToContinue()
       endif
     endif
+
   else
     echo "ToggleFavouriteDirs: Error! List variable g:fineFunc_favouriteDirs has not been set.\n"
     echo "                            Set according to this example in your .vimrc:\n"
