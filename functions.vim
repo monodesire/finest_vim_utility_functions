@@ -54,7 +54,7 @@ function! FindHeaderFile()
       let l:counter += 1
     endfor
 
-    let l:userInput = s:TrimString(s:askForUserInput("\nSelect one to open (0-" . (l:numberOfFiles-1)  . "): "))
+    let l:userInput = s:trimString(s:askForUserInput("\nSelect one to open (0-" . (l:numberOfFiles-1)  . "): "))
 
     if l:userInput =~# "[0-9]" && l:userInput >= 0 && l:userInput < l:numberOfFiles
       execute "split " . l:listOfFiles[l:userInput]
@@ -64,7 +64,6 @@ function! FindHeaderFile()
     endif
   endif
 endfunction
-
 
 " ------------------------------------------------------------------------------
 " Function:    PerlGrep(pattern, ignoreCase)
@@ -121,7 +120,6 @@ function! PerlGrep(...)
   endif
 endfunction
 
-
 " ------------------------------------------------------------------------------
 " Function:    FindFiles(pattern)
 " Description: Function that find files (starting from the current working
@@ -143,7 +141,6 @@ function! FindFiles(pattern)
 
   echo "FindFiles: Found " . len(l:listOfFiles) . " file(s) matching the search pattern.\n"
 endfunction
-
 
 " ------------------------------------------------------------------------------
 " Function:    SelectBuffer(searchString)
@@ -189,7 +186,7 @@ function! SelectBuffer(searchString)
   if(l:numberOfMatches == 0)
     echo "SelectBuffer: Didn't find any buffers that matches the given search string.\n"
   else
-    let l:desiredBufferNumber = s:TrimString(s:askForUserInput("\nSelect buffer number: "))
+    let l:desiredBufferNumber = s:trimString(s:askForUserInput("\nSelect buffer number: "))
     if l:desiredBufferNumber =~# "[0-9]"
       if(bufexists(str2nr(l:desiredBufferNumber)))
         execute ":buffer " . l:desiredBufferNumber
@@ -206,7 +203,6 @@ function! SelectBuffer(searchString)
     endif
   endif
 endfunction
-
 
 " ------------------------------------------------------------------------------
 " Function:    ToggleFavouriteDirs(newFavouriteDir)
@@ -280,6 +276,221 @@ function! ToggleFavouriteDirs(...)
   endif
 endfunction
 
+" ------------------------------------------------------------------------------
+" Function:    TagSearch(tag1, tag2, ...)
+" Description: Function that finds user defined tags (more about the syntax of
+"              those tags below) within the active buffer. The active buffer is
+"              typically a text file (maybe a cheat sheet or a lazy dog, or
+"              other type of file holding information of some kind) in which the
+"              user has applied tags for marking important or interesting
+"              sections, and then using this function to do a somewhat
+"              intelligent search among those tags. The search result ends up
+"              in quickfix.
+"
+"              * Tag syntax: Tags are listed on a single line, and that line
+"              must start with ">>>". Tags are separated by a comma. (White
+"              spaces between the commas are ignored.) A tag may contain a-z,
+"              0-9 and underscore. (Upper case letters will be treated as lower
+"              case.) Here are some tag lines examples:
+"
+"              >>> linux, network, routing, ipv6, ipv4
+"
+"                     Comment: All those five tags are valid.
+"
+"              >>> programming, c, loop, syntax
+"
+"                     Comment: All those four tags are valid.
+"
+"              >>> perl, regexp
+"
+"                     Comment: Both tags are valid.
+"
+"              >>> this_is_a_nonsense_tag, this_is_too_nonsense123, qwerty999
+"
+"                     Comment: All three tags are valid.
+"
+"              >>> asdf    ,   456 ,  sunny day   , heLLo, invalid-tag
+"
+"                     Comment: Here the "asdf", "456" and "heLLo" tags are
+"                              valid. The "heLLo" tag will be treated as "hello"
+"                              in searches. The tags "sunny day" and
+"                              "invalid-tag" are invalid since they contain
+"                              illegal characters (white space and dash
+"                              respectively).
+"
+"              * Tag search: Searching for tags and combination of tags in the
+"              active buffer is done via this function's arguments. Tags are
+"              listed as strings, according to this example:
+"
+"              TagSearch("linux", "ipv6")
+"
+"                     Comment: This will find all tag lines containing the
+"                              "linux" tag and the "ipv6" tag.
+"
+"              There are two operators that may optionally be used while
+"              performing a tag seach - the AND (&) operator and the OR (|)
+"              operator. If an AND operator is given together with a tag in a
+"              tag search, that specific tag is required to be a part of the
+"              tags on a tag line (for the search to be considered a hit). If
+"              an OR operator is given, that tag is just optional to be
+"              present in the line of tags. The operator is inserted as the
+"              first character, before the actual tag name in the function
+"              argument list. A tag without any operator, is considered to
+"              have an AND operator in front of it. See these examples:
+"
+"              TagSearch("coffee", "&tea", "|water")
+"
+"                     Comment: This will find all tag lines containing both
+"                              the "coffee" and "tea" tags. (A tag line
+"                              containing just one of these tags with not be
+"                              considered a hit, because both these tags are
+"                              AND tags, thus both are required.) It will also
+"                              find all tag lines containing the "water" tag,
+"                              regardless of any other tags in the tag line or
+"                              in the search itself (this because "water" is an
+"                              OR tag).
+"
+"              * Additional functionality: If the TagSearch() function is
+"              called with no arguments, the user will be presented with a
+"              printed list of all (valid) tags found in the active buffer.
+"              Duplicates will be removed in this printout (if a tag is found
+"              in multiple places), and the list will be sorted alphabetic
+"              order.
+" Parameters:  See Description.
+" Returns:     N/A
+" Examples:    See Description.
+" ------------------------------------------------------------------------------
+function! TagSearch(...)
+  " examine function arguments
+
+  if a:0 == 0
+    " no arguments given; list all tags found in the active buffer
+
+    let l:orgCursorPosition = getpos(".")  " store the cursor's current position
+    call cursor(1, 1)  " move cursor to the beginning of the first line of the buffer
+
+    let l:tagsList = []
+
+    while search("^>>>", "cW") > 0  " iterate over all >>> found in the active buffer
+      let l:lineList = s:getAllTagsOnCurrentLine()
+      let l:tagsList = l:tagsList + l:lineList
+
+      let l:cursorPosition = getpos(".")  " get current cursor position
+      let l:nextLine = l:cursorPosition[1] + 1  " go to the next line in the active buffer
+      if l:nextLine > line('$')
+        " we have reached the end of the buffer
+        break
+      endif
+      call cursor(l:nextLine, 1)  " put cursor in column one
+    endwhile
+
+    call setpos('.', l:orgCursorPosition)  " restore cursor back to original position
+
+    let l:tagsList = s:sortAndUniquifyList(l:tagsList)  " remove duplicates and sort the list of tags
+
+    " print the result, i.e. all valid tags found in the active buffer
+
+    echo "TagSearch: Tags found in active buffer:\n\n"
+
+    for l:tag in l:tagsList
+      echo l:tag
+    endfor
+
+    echo "\n"
+    call s:pressAnyKeyToContinue()
+
+  else
+    " at least some arguments found; do a tag search
+
+    let l:result = setqflist([])  " clear the current quickfix
+
+    let l:orgCursorPosition = getpos(".")  " store the cursor's current position
+    call cursor(1, 1)  " move cursor to the beginning of the first line of the buffer
+
+    let l:numberOfSuccessfulMatches = 0
+
+    while search("^>>>", "cW") > 0  " iterate over all >>> found in the active buffer
+      let l:lineList = s:getAllTagsOnCurrentLine()
+
+      " loop over the arguments (tags) given by the user;
+      " see if there is match between the user given tags and the ones on the current line
+
+      let l:fullTagsMatch = 0
+      let l:numberOfAndTags = 0
+      let l:numberOfAndMatches = 0
+
+      for l:arg in a:000
+        let l:userGivenTag = s:trimString(l:arg)  " remove leading and trailing whitespaces
+        let l:userGivenTag = tolower(l:userGivenTag)  " make all characters into lower case
+        let l:andMatch = 1  " default is an AND match
+
+        " check if the user has given a "?" (AND) or "|" (OR) in the beginning of the tag
+
+        if l:userGivenTag =~ "^\&"
+          " AND
+          let l:userGivenTag = strpart(l:userGivenTag, 1)
+          let l:numberOfAndTags += 1
+        elseif l:userGivenTag =~ "^|"
+          " OR
+          let l:andMatch = 0  " this means an OR match
+          let l:userGivenTag = strpart(l:userGivenTag, 1)
+        else
+          " AND
+          let l:numberOfAndTags += 1
+        endif
+
+        if l:userGivenTag =~ "^[a-z0-9_]*$" && l:userGivenTag != ""  " make sure the user given tag is valid (i.e. not containing unallowed characters)
+          " ending up here means valid tag
+
+          " compare current line tags with user given tags
+
+          let l:tagMatch = 0
+          for l:lineTag in l:lineList
+            if l:userGivenTag == l:lineTag
+              let l:tagMatch = 1
+              break
+            endif
+          endfor
+
+          if l:tagMatch == 1 && l:andMatch == 1  " an AND tag is matching
+            let l:numberOfAndMatches += 1
+          elseif l:tagMatch == 1 && l:andMatch == 0  " an OR tag is matching
+            let l:fullTagsMatch = 1
+            break
+          endif
+        endif
+      endfor
+
+      " check if we have a match or not
+
+      let l:cursorPosition = getpos(".")  " get current cursor position
+
+      if l:fullTagsMatch == 1 || l:numberOfAndTags == l:numberOfAndMatches
+        " yes, we have a match; save this line to quickfix
+
+        let l:filename = expand('%:p')  " filename (incl. full path) of active buffer
+        let l:lineString = getline(".")  " get line under cursor
+
+        call setqflist([{'filename': l:filename, 'lnum': l:cursorPosition[1], 'text': l:lineString}], 'a')
+
+        let l:numberOfSuccessfulMatches += 1
+      endif
+
+      let l:nextLine = l:cursorPosition[1] + 1  " go to the next line in the active buffer
+      if l:nextLine > line('$')
+        " we have reached the end of the buffer
+        break
+      endif
+      call cursor(l:nextLine, 1)  " put cursor in column one
+    endwhile  " end iterating over all >>> found in the active buffer
+
+    echo "TagSearch: Found " . l:numberOfSuccessfulMatches . " matching tag lines. Quickfix has been updated.\n"
+    call s:pressAnyKeyToContinue()
+
+    call setpos('.', l:orgCursorPosition)  " restore cursor back to original position
+  endif
+endfunction
+
 
 " ==============================================================================
 " LOCAL FUNCTIONS
@@ -301,7 +512,6 @@ function! s:askForUserInput(question)
   return l:userInput
 endfunction
 
-
 " ------------------------------------------------------------------------------
 " Function:    s:pressAnyKeyToContinue()
 " Description: Asks the user for any key press.
@@ -314,16 +524,54 @@ function! s:pressAnyKeyToContinue()
   let c = getchar()
 endfunction
 
-
 " ------------------------------------------------------------------------------
-" Function:    s:TrimString
+" Function:    s:trimString(stringToFix)
 " Description: Removes leading and trailing whitespaces of a string.
 " Parameters:  stringToFix {String}: The string to remove whitespaces from.
 " Returns:     Same as stringToFix, but with no leading or trailing
 "              whitespaces.
 " Examples:    N/A
 " ------------------------------------------------------------------------------
-function! s:TrimString(stringToFix)
+function! s:trimString(stringToFix)
   let l:fixedString = substitute(a:stringToFix, '^\s*\(.\{-}\)\s*$', '\1', '')
   return l:fixedString
+endfunction
+
+" ------------------------------------------------------------------------------
+" Function:    s:sortAndUniquifyList(list)
+" Description: Takes a list, removes duplicates, sorts it, and then returns
+"              it.
+" Parameters:  list {List}: The list to be fixed.
+" Returns:     A sorted list with no duplicates.
+" Examples:    N/A
+" ------------------------------------------------------------------------------
+function! s:sortAndUniquifyList(list)
+  let l:dict = {}
+  for l:listItem in a:list
+    let l:dict[l:listItem] = ''
+  endfor
+  let l:uniqueList = keys(l:dict)
+  let l:sortedList = sort(l:uniqueList)
+  return l:sortedList
+endfunction
+
+" ------------------------------------------------------------------------------
+" Function:    s:getAllTagsOnCurrentLine()
+" Description: Extracts all tags found on the cursor's current line. This
+"              function is to be used by external TagSearch() function. This
+"              function assumes that the current line under the cursor is
+"              starting ">>>", which is the character sequence indicating a tag
+"              line.
+" Parameters:  N/A
+" Returns:     A list containing all tags found on the current line.
+" Examples:    N/A
+" ------------------------------------------------------------------------------
+function! s:getAllTagsOnCurrentLine()
+  let l:lineString = getline(".")  " get line under cursor
+  let l:lineString = strpart(l:lineString, 3)  " grab characters to the right of the inital >>> sequence
+  let l:lineString = s:trimString(l:lineString)  " remove leading and trailing whitespaces
+  let l:lineString = tolower(l:lineString)  " make all characters into lower case
+  let l:lineList = split(l:lineString, '\s*,\s*')  " a comma is used to split between tags
+  call filter(l:lineList, 'v:val =~ "^[a-z0-9_]*$"')  " filter away crappy tags, those containing unallowed characters
+  return l:lineList
 endfunction
