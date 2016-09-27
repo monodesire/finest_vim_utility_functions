@@ -428,15 +428,25 @@ function! TagSearch(...)
 
         if l:userGivenTag =~ "^\&"
           " AND
-          let l:userGivenTag = strpart(l:userGivenTag, 1)
-          let l:numberOfAndTags += 1
+          if strlen(l:userGivenTag) > 1
+            let l:userGivenTag = strpart(l:userGivenTag, 1)
+            let l:userGivenTag = s:trimString(l:userGivenTag)  " remove leading and trailing whitespaces
+            if l:userGivenTag != ""
+              let l:numberOfAndTags += 1
+            endif
+          endif
         elseif l:userGivenTag =~ "^|"
           " OR
-          let l:andMatch = 0  " this means an OR match
-          let l:userGivenTag = strpart(l:userGivenTag, 1)
+          if strlen(l:userGivenTag) > 1
+            let l:andMatch = 0  " this means an OR match
+            let l:userGivenTag = strpart(l:userGivenTag, 1)
+            let l:userGivenTag = s:trimString(l:userGivenTag)  " remove leading and trailing whitespaces
+          endif
         else
           " AND
-          let l:numberOfAndTags += 1
+          if l:userGivenTag != ""
+            let l:numberOfAndTags += 1
+          endif
         endif
 
         if l:userGivenTag =~ "^[a-z0-9_]*$" && l:userGivenTag != ""  " make sure the user given tag is valid (i.e. not containing unallowed characters)
@@ -465,7 +475,7 @@ function! TagSearch(...)
 
       let l:cursorPosition = getpos(".")  " get current cursor position
 
-      if l:fullTagsMatch == 1 || l:numberOfAndTags == l:numberOfAndMatches
+      if l:fullTagsMatch == 1 || l:numberOfAndTags == l:numberOfAndMatches && l:numberOfAndTags != 0
         " yes, we have a match; save this line to quickfix
 
         let l:filename = expand('%:p')  " filename (incl. full path) of active buffer
