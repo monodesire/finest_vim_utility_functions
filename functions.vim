@@ -5,6 +5,7 @@
 " Author:       Mats Lintonsson <mats.lintonsson@gmail.com>
 " License:      MIT License
 " Website:      https://github.com/monodesire/finest_vim_utility_functions/
+" TODOs:        - Make the FindFiles() file search case insensitive.
 " ##############################################################################
 
 
