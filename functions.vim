@@ -357,6 +357,16 @@ endfunction
 "              Duplicates will be removed in this printout (if a tag is found
 "              in multiple places), and the list will be sorted alphabetic
 "              order.
+"
+"              * Syntax file: There is a Vim syntax file called fftags.vim
+"              located in the same repo as this file. The syntax file works with
+"              files having the .fftags extension. It will highlight tag lines.
+"              To use the syntax file, take these actions:
+"                1. Put the syntax file in your ~/.vim/syntax/ directory.
+"                2. Turn on syntax within Vim (:help syntax) and make sure to
+"                   turn on file type detection (:help filetype).
+"                3. Add the following line to your ~/.vim/filetype.vim file:
+"                     au BufNewFile,BufReadPost *.fftags setf fftags
 " Parameters:  See Description.
 " Returns:     N/A
 " Examples:    See Description.
