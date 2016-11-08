@@ -4,7 +4,7 @@ Collection of helpful Vim functions.
 
 ## Compatibility
 
-The functions have been tested in Vim 7.3 in a typical/modern Linux environment. Function PerlGrep() was tested with "grep (GNU grep) 2.20".
+The functions have been tested in Vim 7.3 and 8.0 in a typical/modern Linux environment. Function PerlGrep() was tested with "grep (GNU grep) 2.20". Function GitBlame() was tested with "git version 1.8.4.2".
 
 ## How to use
 
