@@ -37,3 +37,6 @@ The purpose of this function is to assist a user in quickly jumping between his/
 
 ### TagSearch()
 Function that finds user defined tags within the active buffer. The active buffer is typically a text file (maybe a cheat sheet or a lazy dog, or other type of file holding information of some kind) in which the user has applied tags for marking important or interesting sections, and then using this function to do a somewhat intelligent search among those tags. The search result ends up in quickfix. There is a syntax file (fftags.vim) available for use in conjunction with this function. See the TagSearch() function's header for more information on how to use that syntax file.
+
+### GitBlame()
+Function that runs "git blame" on the active window's buffer. A new vertical window will be opened to the left of the active window displaying the "git blame" result. The two windows will be scroll bound and synchronized, so scrolling in any of the windows will make the other follow automatically.

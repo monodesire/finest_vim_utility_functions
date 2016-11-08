@@ -512,6 +512,69 @@ function! TagSearch(...)
   endif
 endfunction
 
+" ------------------------------------------------------------------------------
+" Function:    GitBlame(windowWidth)
+" Description: Function that runs 'git blame' on the active window's buffer. A
+"              new vertical window will be opened to the left of the active
+"              window displaying the 'git blame' result. The two windows will be
+"              scroll bound and synchronized, so scrolling in any of the windows
+"              will make the other follow automatically.
+"
+"              Note 1: This function obviously needs git to be installed in your
+"              system and operated on a file that is located within a git repo.
+"              In addition, the active window must have its current path to
+"              somewhere within the same repo as the buffer/file to analyze.
+"
+"              Note 2: Any errors during the 'git blame' execution will be
+"              shown in the 'git blame' window.
+" Parameters:  windowWidth {Number} (optional): The width of the 'git blame'
+"                                               window. If not given, the
+"                                               default width is 58 columns.
+" Returns:     0 = no errors during execution
+" Examples:    :call GitBlame(102)
+" ------------------------------------------------------------------------------
+function! GitBlame(...)
+  let l:windowWidth = 58
+
+  " check first argument, which could be a window width given by the user
+  if a:0 > 0
+    if type(a:1) == 0  " 0 means a variable of Number type
+      if a:1 > 0  " we cannot allow a negative width
+        let l:windowWidth = a:1
+      endif
+    endif
+  endif
+
+  " move cursor to the beginning of the first line of the current buffer
+  call cursor(1, 1)
+
+  " get the filename (incl. full path) of the active buffer
+  let l:filename = expand('%:p')
+
+  " set scroll bind for the current buffer
+  execute "set scrollbind"
+
+  " open a new vertical window (with a given width) to the left of the current window
+  execute l:windowWidth . "vnew"
+
+  " run 'git blame' on the file in the right window, and present the result in the left window
+  execute "read ! git blame " . l:filename
+
+  " move cursor to the the first line of the 'git blame' buffer
+  call cursor(1, 1)
+
+  " remove top line in the 'git blame' window, which is empty for some reason (TODO: Investigate why, some day...)
+  execute "1delete"
+
+  " set scroll bind for the 'git blame' window
+  execute "set scrollbind"
+
+  " sync the two windows
+  execute "syncbind"
+
+  " make the first window active again, i.e. move away from the 'git blame' window
+  execute "wincmd p"
+endfunction
 
 " ==============================================================================
 " LOCAL FUNCTIONS
