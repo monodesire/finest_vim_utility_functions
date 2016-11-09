@@ -17,8 +17,11 @@ endif
 let s:cpo_save = &cpo
 set cpo&vim
 
-hi def link tagLine Comment
-syn match tagLine /^>>>.*$/
+hi def link fftagsLine Underlined
+syn match fftagsLine /^>>>.*$/
+
+hi def link fftagsComment Comment
+syn match fftagsComment "#.*"
 
 let b:current_syntax = "fftags"
 
