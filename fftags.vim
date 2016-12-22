@@ -23,6 +23,9 @@ syn match fftagsLine /^>>>.*$/
 hi def link fftagsComment Comment
 syn match fftagsComment "#.*"
 
+hi def link fftagsTodo Todo
+syn keyword fftagsTodo TODO FIXME XXX DEBUG NOTE
+
 let b:current_syntax = "fftags"
 
 let &cpo = s:cpo_save
